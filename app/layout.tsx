@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
-import { AppShell } from "@/components/app-shell";
-export const metadata: Metadata = { title: "Launchic", description: "Find opportunities. Launch smarter. Grow faster." };
-export default function RootLayout({children}:{children:ReactNode}){return <html lang="en"><body><AppShell>{children}</AppShell></body></html>}
+export const metadata: Metadata = { title: "Launchic — Find What to Build. Know What to Do Next.", description: "Launchic helps you discover opportunities, validate ideas, launch faster, and grow what works." };
+export default function RootLayout({children}:{children:ReactNode}){return <html lang="en"><body>{children}</body></html>}
