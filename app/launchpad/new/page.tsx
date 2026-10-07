@@ -1,0 +1,1 @@
+import {LaunchBuilder} from "@/components/launch-builder"; export default function NewLaunch(){return <div className="page narrow"><div className="eyebrow">LAUNCHPAD / NEW</div><h1>Build the next launch.</h1><p>Start with the outcome. Launchic will turn it into a focused execution plan.</p><LaunchBuilder/></div>}
