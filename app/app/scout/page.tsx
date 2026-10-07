@@ -24,13 +24,13 @@ export default async function Scout(){
   }
   async function turnIntoIdea(formData:FormData){
     "use server";
-    const opportunityId=String(formData.get("opportunityId")||"");
+    const title=String(formData.get("title")||""); const description=String(formData.get("description")||""); const score=Number(formData.get("score")||0);
     const ss=await auth.api.getSession({headers:await headers()}); if(!ss)return;
-    const o=await db.opportunity.findFirst({where:{id:opportunityId,organization:{ownerId:ss.user.id}}}); if(!o)return;
-    const existing=await db.idea.findFirst({where:{organizationId:o.organizationId,title:o.title}});
-    if(!existing) await db.idea.create({data:{organizationId:o.organizationId,title:o.title,description:o.description,score:o.confidence||null}});
+    const org=await db.organization.findFirst({where:{ownerId:ss.user.id}}); if(!org)return;
+    const existing=await db.idea.findFirst({where:{organizationId:org.id,title}});
+    if(!existing) await db.idea.create({data:{organizationId:org.id,title,description,score:score||null}});
   }
   return <main className="page"><div className="scoutTop"><div><div className="eyebrow">SCOUT</div><h1>See what deserves your attention.</h1><p>Scout turns your Business Brain into opportunities to investigate. These are hypotheses, not guarantees.</p></div><span className="stagePill">{o.profile?.stage||"EXPLORER"}</span></div>
-  <div className="scoutGrid">{list.map(([type,title,desc,score])=><article className="scoutCard" key={String(title)}><div className="cardMeta"><span>{String(type)}</span><b>{String(score)}% fit</b></div><h2>{String(title)}</h2><p>{String(desc)}</p><div className="scoutBottom"><small>Next: validate the assumption</small><div className="buttonRow"><form action={saveOpportunity}><input type="hidden" name="type" value={String(type)}/><input type="hidden" name="title" value={String(title)}/><input type="hidden" name="description" value={String(desc)}/><input type="hidden" name="score" value={String(score)}/><button className="pillButton">Save</button></form><form action={turnIntoIdea}><input type="hidden" name="opportunityId" value={o[0]}/><button className="pillButton">Explore</button></form></div></div></article>)}</div>
+  <div className="scoutGrid">{list.map(([type,title,desc,score])=><article className="scoutCard" key={String(title)}><div className="cardMeta"><span>{String(type)}</span><b>{String(score)}% fit</b></div><h2>{String(title)}</h2><p>{String(desc)}</p><div className="scoutBottom"><small>Next: validate the assumption</small><div className="buttonRow"><form action={saveOpportunity}><input type="hidden" name="type" value={String(type)}/><input type="hidden" name="title" value={String(title)}/><input type="hidden" name="description" value={String(desc)}/><input type="hidden" name="score" value={String(score)}/><button className="pillButton">Save</button></form><form action={turnIntoIdea}><input type="hidden" name="title" value={String(title)}/><input type="hidden" name="description" value={String(desc)}/><input type="hidden" name="score" value={String(score)}/><button className="pillButton">Explore</button></form></div></div></article>)}</div>
   {o.opportunities.length>0&&<section className="savedSection"><div className="sectionHead"><h2>Saved opportunities</h2><span>{o.opportunities.length}</span></div>{o.opportunities.map(x=><Link className="savedRow" href={"/app/opportunity/"+x.id} key={x.id}><span>{x.type}</span><div><b>{x.title}</b><small>{x.description}</small></div><strong>→</strong></Link>)}</section>}</main>;
 }
