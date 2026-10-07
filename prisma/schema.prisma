@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Stage {
+  EXPLORER
+  IDEA
+  VALIDATION
+  BUILDER
+  BUSINESS
+  GROWTH
+}
+
+enum IdeaStatus {
+  EXPLORING
+  VALIDATING
+  BUILDING
+  ARCHIVED
+}
+
+enum ActionStatus {
+  BACKLOG
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  name         String?
+  passwordHash String?
+  createdAt    DateTime       @default(now())
+  organizations OrganizationMember[]
+}
+
+model Organization {
+  id          String         @id @default(cuid())
+  name        String
+  ownerId     String
+  createdAt   DateTime       @default(now())
+  owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members     OrganizationMember[]
+  profile     BusinessProfile?
+  brain       BusinessBrain?
+  ideas       Idea[]
+  opportunities Opportunity[]
+  actions     Action[]
+  metrics     Metric[]
+  recommendations Recommendation[]
+  activities  Activity[]
+  subscription Subscription?
+}
+
+model OrganizationMember {
+  id             String @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String @default("OWNER")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([organizationId, userId])
+}
+
+model BusinessProfile {
+  id             String @id @default(cuid())
+  organizationId String @unique
+  stage          Stage @default(EXPLORER)
+  name           String?
+  website        String?
+  description    String?
+  industry       String?
+  targetCustomer String?
+  businessModel  String?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model BusinessBrain {
+  id                 String @id @default(cuid())
+  organizationId     String @unique
+  interests          String[] @default([])
+  skills             String?
+  goals              String[] @default([])
+  challenges         String?
+  positioning        String?
+  context            Json?
+  acquisitionChannels String[] @default([])
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  updatedAt          DateTime @updatedAt
+  createdAt          DateTime @default(now())
+}
+
+model Idea {
+  id             String @id @default(cuid())
+  organizationId String
+  title          String
+  description    String
+  status         IdeaStatus @default(EXPLORING)
+  stage          Stage @default(IDEA)
+  score          Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  validations    Validation[]
+  actions        Action[]
+}
+
+model Opportunity {
+  id             String @id @default(cuid())
+  organizationId String
+  type           String
+  title          String
+  description    String
+  impact         Int?
+  confidence     Int?
+  status         String @default("NEW")
+  source         String @default("SCOUT")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actions        Action[]
+}
+
+model Validation {
+  id          String @id @default(cuid())
+  ideaId      String
+  objective   String
+  status      String @default("PENDING")
+  result      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  idea        Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+}
+
+model Action {
+  id             String @id @default(cuid())
+  organizationId String
+  ideaId         String?
+  opportunityId  String?
+  title          String
+  description    String?
+  type           String
+  priority       Priority @default(MEDIUM)
+  status         ActionStatus @default(BACKLOG)
+  dueDate        DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  idea           Idea? @relation(fields: [ideaId], references: [id], onDelete: SetNull)
+  opportunity    Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+}
+
+model Metric {
+  id             String   @id @default(cuid())
+  organizationId String
+  type           String
+  value          Float
+  date           DateTime @default(now())
+  source         String   @default("MANUAL")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Recommendation {
+  id             String   @id @default(cuid())
+  organizationId String
+  type           String
+  title          String
+  explanation    String
+  action         String
+  priority       Priority @default(MEDIUM)
+  createdAt      DateTime @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Activity {
+  id             String   @id @default(cuid())
+  organizationId String
+  type           String
+  description    String
+  createdAt      DateTime @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id             String @id @default(cuid())
+  organizationId String @unique
+  plan           String @default("FREE")
+  status         String @default("ACTIVE")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
